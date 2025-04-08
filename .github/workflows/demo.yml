@@ -1,0 +1,82 @@
+name: Artifacts Demo
+run-name: Artifacts Demo
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+        # By caching node_modules the workflow avoids re-downloading dependencies on every run.
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          # Specifies the path to the npm cache directory which stores dependencies
+          path: ~/.npm
+          # The key is a unique identifier for the cache.
+          # 'hashFiles creates a hash based on the contents of package-lock.json.
+          key: deps-node-modules-${{ hashFiles('**package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint code
+        run: npm run lint
+      - name: Test code
+        run: npm run test
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      # Defines an output called script-file which stores the output of the publish step
+      script-file: ${{ steps.publish.outputs.file-name }}
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+        # By caching node_modules the workflow avoids re-downloading dependencies on every run.
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          # Specifies the path to the npm cache directory which stores dependencies
+          path: ~/.npm
+          # The key is a unique identifier for the cache.
+          # 'hashFiles creates a hash based on the contents of package-lock.json.
+          key: deps-node-modules-${{ hashFiles('**package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build website
+        run: npm run build
+        # Fined the js file name in the dist directory
+      - name: Publish js file name
+        # The ID publish is needed to reference this step's output later
+        id: publish
+        # Linux command to find the all js files in dist folder and writes the file name to $GITHUB_OUTPUT
+        run: find dist/assets/*.js -type f -execdir echo 'file-name={}' >> $GITHUB_OUTPUT ';'
+        # Can store the produced files as artifacts using the actions
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with: 
+          # Give the name for the artifacts
+          name: dist-files
+          # Path to the files that we want to store as artifacts
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+        # Download the artifacts using the actions
+      - name: Get dist artifacts
+        uses: actions/download-artifact@v3
+        with: 
+          # Give the name for the artifacts want to download
+          name: dist-files
+        # Check the download the content correctly
+      - name: Output content
+        run: ls
+      - name: Output filename
+        # This step echoes the value of the script-file output from the build job.
+        run: echo ${{ needs.build.outputs.script-file }}
+      - name: Deploy
+        run: echo "Deploying..."        
