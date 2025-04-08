@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # By caching node_modules the workflow avoids re-downloading dependencies on every run.
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # Specifies the path to the npm cache directory which stores dependencies
           path: ~/.npm
@@ -34,10 +34,10 @@ jobs:
       script-file: ${{ steps.publish.outputs.file-name }}
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # By caching node_modules the workflow avoids re-downloading dependencies on every run.
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # Specifies the path to the npm cache directory which stores dependencies
           path: ~/.npm
@@ -56,7 +56,7 @@ jobs:
         run: find dist/assets/*.js -type f -execdir echo 'file-name={}' >> $GITHUB_OUTPUT ';'
         # Can store the produced files as artifacts using the actions
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with: 
           # Give the name for the artifacts
           name: dist-files
@@ -68,7 +68,7 @@ jobs:
     steps:
         # Download the artifacts using the actions
       - name: Get dist artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with: 
           # Give the name for the artifacts want to download
           name: dist-files
